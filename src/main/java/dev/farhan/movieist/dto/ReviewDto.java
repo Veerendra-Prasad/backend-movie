@@ -1,0 +1,20 @@
+package dev.farhan.movieist.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+public class ReviewDto {
+    private String username;
+    private String body;
+    private LocalDateTime created;
+
+    public ReviewDto(String username, String body, LocalDateTime created) {
+        this.username = username;
+        this.body = body;
+        this.created = created;
+    }
+}
