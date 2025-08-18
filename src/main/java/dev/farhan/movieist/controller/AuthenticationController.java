@@ -54,6 +54,7 @@ public class AuthenticationController {
         }
     }
 
+    // FIXME : change the input type from RequestParam and test it again
     @PostMapping("/resend")
     public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
         try {

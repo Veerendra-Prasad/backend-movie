@@ -2,15 +2,11 @@ package dev.farhan.movieist.service;
 
 import dev.farhan.movieist.dto.MovieWithReviewDto;
 import dev.farhan.movieist.model.Movie;
-import dev.farhan.movieist.model.Review;
 import dev.farhan.movieist.repository.MovieRepository;
-import dev.farhan.movieist.repository.ReviewRepository;
 import dev.farhan.movieist.responses.OmdbMovieResponse;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,63 +19,112 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class MovieService {
     private final MovieRepository repository;
-    private final MongoTemplate mongoTemplate;
-    private final RestTemplate restTemplate; // For OMDb API call
+    private final RestTemplate restTemplate;
     private final ModelMapper modelMapper;
+    private final MongoTemplate mongoTemplate;
 
     @Value("${omdb.api.key}")
     private String omdbApiKey;
 
-    public MovieWithReviewDto findMovieByTitleOrFetchFromOMDb(String title) {
-        Optional<Movie> optionalMovie = repository.findByTitleIgnoreCase(title);
+    public MovieWithReviewDto findMovieByTitleOrFetchFromOMDb(String title){
+        return getMovieByTitle(title);
+    }
 
-        if (optionalMovie.isPresent()) {
-            Movie movie = optionalMovie.get();
+    public MovieWithReviewDto getMovieByTitle(String title) {
+        Optional<Movie> movies = repository.findByTitleIgnoreCase(title);
+
+        if (movies.isPresent()) {
+            Movie movie = movies.get();
             return getMovieWithReviews(movie.getId());
         }
 
-        // If movie not in DB, fetch from OMDb
-        String omdbUrl = String.format(
-                "http://www.omdbapi.com/?t=%s&apikey=%s",
-                title.replace(" ", "+"),
-                omdbApiKey
-        );
-
-        // Deserialize directly into OmdbMovieResponse
-        ResponseEntity<OmdbMovieResponse> response =
-                restTemplate.getForEntity(omdbUrl, OmdbMovieResponse.class);
-
-        if (response.getStatusCode() == HttpStatus.OK && Objects.requireNonNull(response.getBody()).getTitle() != null) {
-            System.out.println(response.getStatusCode());
-            System.out.println(response.getBody().toString());
-            OmdbMovieResponse omdbData = response.getBody();
-
-//             Convert to DTO
-            MovieWithReviewDto dto = convertOmdbToDto(omdbData);
-
-//             Ensure reviews are empty
-            dto.setReviews(List.of());
-
-            return dto;
-        }
-
-        throw new RuntimeException("Movie not found in DB or OMDb");
+        Movie movie = getMovieByTitleFromOmdb(title);
+        return convertMovieToMovieWithReviewDto(movie);
     }
 
+    public MovieWithReviewDto findMovieById(String id){
+        Movie movie = getMovieById(id);
+
+        return convertMovieToMovieWithReviewDto(movie);
+    }
+
+    public Movie getMovieById(String id){
+        Optional<Movie> optionalMovie = repository.findById(id);
+
+        return optionalMovie.orElseGet(() -> getMovieByIdFromOmdb(id));
+
+    }
 
     public Page<Movie> getMovies(int page, int size) {
         return repository.findAll(PageRequest.of(page, size));
     }
 
-    public MovieWithReviewDto findMovieById(String imdbId) {
-            Movie movie = repository.findById(imdbId)
-                    .orElseThrow(() -> new RuntimeException("movie not found"));
-        return getMovieWithReviews(imdbId);
+    public Movie getMovieByIdFromOmdb(String id) {
+        String url = String.format("http://www.omdbapi.com/?i=%s&apikey=%s",
+                id.replace(" ", "+"),
+                omdbApiKey
+        );
+
+        ResponseEntity<OmdbMovieResponse> response =
+                restTemplate.getForEntity(url, OmdbMovieResponse.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && Objects.requireNonNull(response.getBody()).getTitle() != null) {
+            OmdbMovieResponse omdbData = response.getBody();
+
+            return convertOmdbToMovie(omdbData);
+        }
+
+        throw new RuntimeException("Movie Not Found");
+    }
+
+    public Movie getMovieByTitleFromOmdb(String title) {
+        String url = String.format("http://www.omdbapi.com/?t=%s&apikey=%s",
+                title.replace(" ", "+"),
+                omdbApiKey
+        );
+
+        ResponseEntity<OmdbMovieResponse> response =
+                restTemplate.getForEntity(url, OmdbMovieResponse.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && Objects.requireNonNull(response.getBody()).getTitle() != null) {
+            OmdbMovieResponse omdbData = response.getBody();
+
+            return convertOmdbToMovie(omdbData);
+        }
+
+        throw new RuntimeException("Movie Not Found");
+    }
+
+    public Movie convertOmdbToMovie(OmdbMovieResponse omdbMovieResponse) {
+        Movie movie = modelMapper.map(omdbMovieResponse, Movie.class);
+
+        List<String> genresList = Arrays.stream(omdbMovieResponse.getGenres().split(","))
+                .map(String::trim) // remove extra spaces
+                .toList();
+        movie.setGenres(genresList);
+        movie.setReviewIds(Collections.emptyList());
+
+        return movie;
+    }
+
+    public MovieWithReviewDto convertMovieToMovieWithReviewDto(Movie movie) {
+        MovieWithReviewDto movieWithReviewDto = modelMapper.map(movie, MovieWithReviewDto.class);
+        movieWithReviewDto.setReviews(Collections.emptyList());
+        return movieWithReviewDto;
+    }
+
+    public MovieWithReviewDto convertOmdbToMovieWithReviewDto(OmdbMovieResponse omdbMovieResponse){
+        MovieWithReviewDto movieWithReviewDto = modelMapper.map(omdbMovieResponse, MovieWithReviewDto.class);
+
+        movieWithReviewDto.setReviews(Collections.emptyList());
+
+        return movieWithReviewDto;
     }
 
     private MovieWithReviewDto getMovieWithReviews(String movieId) {
@@ -117,43 +162,4 @@ public class MovieService {
 
         return results.getUniqueMappedResult();
     }
-
-    public MovieWithReviewDto convertOmdbToDto(OmdbMovieResponse omdb) {
-        MovieWithReviewDto dto = new MovieWithReviewDto();
-
-        dto.setTitle(omdb.getTitle());
-        dto.setReleaseDate(omdb.getReleaseDate());
-
-        if (omdb.getGenres() != null && !omdb.getGenres().isEmpty()) {
-            dto.setGenres(Arrays.asList(omdb.getGenres().split(",\\s*")));
-        } else {
-            dto.setGenres(Collections.emptyList());
-        }
-
-        dto.setPoster(omdb.getPoster());
-
-        // Convert imdbRating String to Double, handle parse errors
-        try {
-            dto.setImdbRating(omdb.getImdbRating() != null ? Double.parseDouble(omdb.getImdbRating()) : null);
-        } catch (NumberFormatException e) {
-            dto.setImdbRating(null);
-        }
-
-        dto.setPlot(omdb.getPlot());
-        dto.setRated(omdb.getRated());
-        dto.setDirector(omdb.getDirector());
-        dto.setWriter(omdb.getWriter());
-        dto.setActors(omdb.getActors());
-        dto.setRuntime(omdb.getRuntime());
-        dto.setLanguage(omdb.getLanguage());
-        dto.setBoxOffice(omdb.getBoxOffice());
-        dto.setType(omdb.getType());
-        dto.setRating(omdb.getRating()); // Assuming Rating class matches OMDb JSON
-
-        dto.setReviews(Collections.emptyList()); // no reviews from OMDb API
-
-        return dto;
-    }
-
-
 }

@@ -11,10 +11,12 @@ public class ReviewDto {
     private String username;
     private String body;
     private LocalDateTime created;
+    private LocalDateTime updated;
 
-    public ReviewDto(String username, String body, LocalDateTime created) {
+    public ReviewDto(String username, String body, LocalDateTime created, LocalDateTime updated) {
         this.username = username;
         this.body = body;
         this.created = created;
+        this.updated = updated;
     }
 }

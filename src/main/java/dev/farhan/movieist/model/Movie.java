@@ -24,9 +24,6 @@ public class Movie {
     private Double imdbRating;
     private String plot;
     private String rated;
-
-    private List<ObjectId> reviewIds;
-
     private String director;
     private String writer;
     private String actors;
@@ -35,6 +32,7 @@ public class Movie {
     private String boxOffice;
     private String type;
     private List<RatingDto> rating;
+    private List<ObjectId> reviewIds;
 
     public Movie(String title, String releaseDate, List<String> genres, String poster, Double imdbRating, String plot, String rated, List<ObjectId> reviewIds, String director, String writer, String actors, String runtime, String language, String boxOffice, String type, List<RatingDto> rating) {
         this.title = title;
@@ -53,5 +51,28 @@ public class Movie {
         this.boxOffice = boxOffice;
         this.type = type;
         this.rating = rating;
+    }
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
+                ", releaseDate='" + releaseDate + '\'' +
+                ", genres=" + genres +
+                ", poster='" + poster + '\'' +
+                ", imdbRating=" + imdbRating +
+                ", plot='" + plot + '\'' +
+                ", rated='" + rated + '\'' +
+                ", reviewIds=" + reviewIds +
+                ", director='" + director + '\'' +
+                ", writer='" + writer + '\'' +
+                ", actors='" + actors + '\'' +
+                ", runtime='" + runtime + '\'' +
+                ", language='" + language + '\'' +
+                ", boxOffice='" + boxOffice + '\'' +
+                ", type='" + type + '\'' +
+                ", rating=" + rating.toString() +
+                '}';
     }
 }

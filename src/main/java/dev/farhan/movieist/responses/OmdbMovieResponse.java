@@ -5,13 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.farhan.movieist.dto.RatingDto;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OmdbMovieResponse {
+    @JsonProperty("imdbID")
+    private String id;
+
     @JsonProperty("Title")
     private String title;
 
@@ -45,10 +50,23 @@ public class OmdbMovieResponse {
     @JsonProperty("Runtime")
     private String runtime;
 
+    @JsonProperty("Language")
+    private String language;
+
+    @JsonProperty("BoxOffice")
+    private String boxOffice;
+
+    @JsonProperty("Type")
+    private String type;
+
+    @JsonProperty("Ratings")
+    private List<RatingDto> rating;
+
     @Override
     public String toString() {
         return "OmdbMovieResponse{" +
-                "title='" + title + '\'' +
+                "id='" + id + '\'' +
+                ", title='" + title + '\'' +
                 ", releaseDate='" + releaseDate + '\'' +
                 ", genres='" + genres + '\'' +
                 ", poster='" + poster + '\'' +
@@ -65,18 +83,6 @@ public class OmdbMovieResponse {
                 ", rating=" + rating +
                 '}';
     }
-
-    @JsonProperty("Language")
-    private String language;
-
-    @JsonProperty("BoxOffice")
-    private String boxOffice;
-
-    @JsonProperty("Type")
-    private String type;
-
-    @JsonProperty("Ratings")
-    private List<RatingDto> rating;
 }
 
 
