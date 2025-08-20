@@ -32,7 +32,7 @@ public class MovieService {
     @Value("${omdb.api.key}")
     private String omdbApiKey;
 
-    public MovieWithReviewDto findMovieByTitleOrFetchFromOMDb(String title){
+    public MovieWithReviewDto findMovieByTitleOrFetchFromOMDb(String title) {
         return getMovieByTitle(title);
     }
 
@@ -48,13 +48,13 @@ public class MovieService {
         return convertMovieToMovieWithReviewDto(movie);
     }
 
-    public MovieWithReviewDto findMovieById(String id){
+    public MovieWithReviewDto findMovieById(String id) {
         Movie movie = getMovieById(id);
 
         return convertMovieToMovieWithReviewDto(movie);
     }
 
-    public Movie getMovieById(String id){
+    public Movie getMovieById(String id) {
         Optional<Movie> optionalMovie = repository.findById(id);
 
         return optionalMovie.orElseGet(() -> getMovieByIdFromOmdb(id));
@@ -114,12 +114,10 @@ public class MovieService {
     }
 
     public MovieWithReviewDto convertMovieToMovieWithReviewDto(Movie movie) {
-        MovieWithReviewDto movieWithReviewDto = modelMapper.map(movie, MovieWithReviewDto.class);
-        movieWithReviewDto.setReviews(Collections.emptyList());
-        return movieWithReviewDto;
+        return getMovieWithReviews(movie.getId());
     }
 
-    public MovieWithReviewDto convertOmdbToMovieWithReviewDto(OmdbMovieResponse omdbMovieResponse){
+    public MovieWithReviewDto convertOmdbToMovieWithReviewDto(OmdbMovieResponse omdbMovieResponse) {
         MovieWithReviewDto movieWithReviewDto = modelMapper.map(omdbMovieResponse, MovieWithReviewDto.class);
 
         movieWithReviewDto.setReviews(Collections.emptyList());

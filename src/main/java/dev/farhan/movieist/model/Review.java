@@ -21,7 +21,6 @@ public class Review {
 
     @Field(name = "user_id")
     @NotNull
-    @Indexed(unique = true)
     private ObjectId userId;
 
     private String body;

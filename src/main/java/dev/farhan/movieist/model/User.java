@@ -36,6 +36,7 @@ public class User implements UserDetails {
     private String verificationCode;
 
     @Field(name = "verification_expiration")
+    @Indexed(expireAfter = "0s")
     private LocalDateTime verificationCodeExpiresAt;
 
 

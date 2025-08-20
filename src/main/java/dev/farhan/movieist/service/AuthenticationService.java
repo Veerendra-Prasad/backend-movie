@@ -41,7 +41,7 @@ public class AuthenticationService {
         }
         User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()));
         user.setVerificationCode(generateVerificationCode());
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));  // Todo : change it back to 10 minutes
         user.setEnabled(false);
         sendVerificationEmail(user);
         return userRepository.save(user);
