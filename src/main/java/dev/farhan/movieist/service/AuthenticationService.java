@@ -41,7 +41,7 @@ public class AuthenticationService {
         }
         User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()));
         user.setVerificationCode(generateVerificationCode());
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));  // Todo : change it back to 10 minutes
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
         user.setEnabled(false);
         sendVerificationEmail(user);
         return userRepository.save(user);
@@ -162,7 +162,7 @@ public class AuthenticationService {
                       %s
                     </div>
                 
-                    <p>If you didn’t request this, you can safely ignore this email.</p>
+                    <p>If you didn't request this, you can safely ignore this email.</p>
                 
                     <p>Thanks,<br>The Team</p>
                 

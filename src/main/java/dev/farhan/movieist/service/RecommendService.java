@@ -2,6 +2,7 @@ package dev.farhan.movieist.service;
 
 import dev.farhan.movieist.dto.MovieWithReviewDto;
 import dev.farhan.movieist.model.Movie;
+import dev.farhan.movieist.repository.MovieRepository;
 import dev.farhan.movieist.responses.OmdbMovieResponse;
 import dev.farhan.movieist.responses.RecommendationResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,14 +19,26 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class RecommendService {
-    private final RestTemplate restTemplate;
     private final MovieService service;
+    private final MovieRepository repository;
 
     @Value("${recommend.api.key}")
     private String recommendationApi;
 
+    public List<String> getMoviesByIds(List<String> movieIds) {
+        List<String> movies = new ArrayList<>();
+        for (String id : movieIds) {
+            Optional<Movie> optionalMovie = repository.findById(id);
+            if(optionalMovie.isPresent()) {
+                Movie movie = optionalMovie.get();
+                movies.add(movie.getTitle());
+            }
+        }
+        return movies;
+    }
+
     public List<MovieWithReviewDto> getRecommend(List<String> stringList){
-        List<String> movieList = Arrays.asList("Inception", "Titanic", "Interstellar");
+        List<String> movieList = getMoviesByIds(stringList);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("liked_movies", movieList);

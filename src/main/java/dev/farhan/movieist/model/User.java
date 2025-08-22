@@ -40,7 +40,7 @@ public class User implements UserDetails {
     private LocalDateTime verificationCodeExpiresAt;
 
 
-    private List<ObjectId> likedMoviesIds = new ArrayList<>();
+    private List<String> likedMoviesIds = new ArrayList<>();
 
     public User(String username, String email, String password) {
         this.username = username;

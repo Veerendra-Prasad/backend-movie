@@ -17,14 +17,14 @@ import java.util.Base64;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor // CHANGED: cleaner constructor injection
+@RequiredArgsConstructor
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    @Value("${app.jwt.refresh-exp-days}")
-    private long refreshTokenExpirationDays;
+    @Value("${app.jwt.refresh-exp-hours}")
+    private long refreshTokenExpirationHours;
 
     @Value("${app.jwt.refresh-cookie-name}")
     private String refreshCookieName;
@@ -38,7 +38,7 @@ public class RefreshTokenService {
         refreshToken.setUserId(userId);
         refreshToken.setTokenHash(hash);
         refreshToken.setCreatedAt(Instant.now());
-        refreshToken.setExpiresAt(Instant.now().plus(refreshTokenExpirationDays, ChronoUnit.DAYS));
+        refreshToken.setExpiresAt(Instant.now().plus(refreshTokenExpirationHours, ChronoUnit.DAYS));
         refreshToken.setUserAgentHash(userAgentHash);
         refreshToken.setIpAddress(ipAddress);
         refreshToken.setRevoked(false);
@@ -69,14 +69,17 @@ public class RefreshTokenService {
         refreshTokenRepository.save(token);
     }
 
-    public ResponseCookie buildRefreshCookie(String token, boolean secure, String domain) {
+    @Value("${api.domain}")
+    private String domain;
+
+    public ResponseCookie buildRefreshCookie(String token, boolean secure) {
         return ResponseCookie.from(refreshCookieName, token)
                 .httpOnly(true)
                 .secure(secure)
-                .sameSite("Strict")
-                .path("/auth/refresh")
+                .sameSite("None")
+                .path("/")
                 .domain(domain)
-                .maxAge(refreshTokenExpirationDays * 24 * 60 * 60)
+                .maxAge(refreshTokenExpirationHours * 60 * 60)
                 .build();
     }
 

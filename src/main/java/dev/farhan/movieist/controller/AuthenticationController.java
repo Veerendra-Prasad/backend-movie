@@ -11,6 +11,7 @@ import dev.farhan.movieist.service.AuthenticationService;
 import dev.farhan.movieist.service.JwtService;
 import dev.farhan.movieist.service.RefreshTokenService;
 import jakarta.servlet.http.Cookie;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -40,6 +41,8 @@ public class AuthenticationController {
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
     }
+
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> register(@RequestBody RegisterUserDto registerUserDto) {
@@ -74,17 +77,23 @@ public class AuthenticationController {
             // ✅ Build refresh token cookie (changed: added cookie handling)
             ResponseCookie refreshCookie = refreshTokenService.buildRefreshCookie(
                     refreshToken,
-                    true, // secure
-                    "localhost" // change to your domain in production
+                    true
             );
             response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
+
             // ✅ Return both access token + expiry info
-            LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setId(authenticatedUser.getId().toHexString());
+            loginResponse.setUsername(authenticatedUser.getUsername());
+            loginResponse.setLikedMoviesIds(authenticatedUser.getLikedMoviesIds());
+            loginResponse.setToken(jwtToken);
+            loginResponse.setExpiresIn(jwtService.getExpirationTime());
+            loginResponse.setEmail(authenticatedUser.getEmail());
             return ResponseEntity.ok(loginResponse);
 
         } catch (RuntimeException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
+            return ResponseEntity.status(401).body(e.getMessage());
         }
     }
 
@@ -147,7 +156,7 @@ public class AuthenticationController {
 
             // 6️⃣ Send new refresh token cookie
             ResponseCookie newRefreshCookie = refreshTokenService.buildRefreshCookie(
-                    newRefreshValue, true, "localhost"
+                    newRefreshValue, true
             );
             response.addHeader(HttpHeaders.SET_COOKIE, newRefreshCookie.toString());
 

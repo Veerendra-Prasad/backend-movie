@@ -19,4 +19,14 @@ public class ReviewDto {
         this.created = created;
         this.updated = updated;
     }
+
+    @Override
+    public String toString() {
+        return "ReviewDto{" +
+                "username='" + username + '\'' +
+                ", body='" + body + '\'' +
+                ", created=" + created +
+                ", updated=" + updated +
+                '}';
+    }
 }
