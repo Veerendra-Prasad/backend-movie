@@ -16,12 +16,12 @@ public class ReviewController {
     private final ReviewService service;
 
     @PostMapping("/{movieId}/{userId}/create")
-    public ResponseEntity<String> createReview(@PathVariable String movieId,
+    public ResponseEntity<ReviewDto> createReview(@PathVariable String movieId,
                                                @RequestBody ReviewRequest request,
                                                @PathVariable ObjectId userId){
             Review review = service.createReview(movieId,request.getBody(),userId);
             ReviewDto dto = service.convertToDto(review);
-            return ResponseEntity.ok(dto + "Review Created Successfully");
+            return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{reviewId}/update")
